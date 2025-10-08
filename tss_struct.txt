@@ -1,0 +1,154 @@
+Folder PATH listing for volume New Volume
+Volume serial number is EA76-D2C5
+D:.
+│   ambiguous_words.1.html
+│   ambiguous_words.exe
+│   classifier_tester.1.html
+│   classifier_tester.exe
+│   cntraining.1.html
+│   cntraining.exe
+│   combine_lang_model.1.html
+│   combine_lang_model.exe
+│   combine_tessdata.1.html
+│   combine_tessdata.exe
+│   dawg2wordlist.1.html
+│   dawg2wordlist.exe
+│   libarchive-13.dll
+│   libb2-1.dll
+│   libbrotlicommon.dll
+│   libbrotlidec.dll
+│   libbz2-1.dll
+│   libcairo-2.dll
+│   libcrypto-3-x64.dll
+│   libcurl-4.dll
+│   libdatrie-1.dll
+│   libdeflate.dll
+│   libexpat-1.dll
+│   libffi-8.dll
+│   libfontconfig-1.dll
+│   libfreetype-6.dll
+│   libfribidi-0.dll
+│   libgcc_s_seh-1.dll
+│   libgif-7.dll
+│   libgio-2.0-0.dll
+│   libglib-2.0-0.dll
+│   libgmodule-2.0-0.dll
+│   libgobject-2.0-0.dll
+│   libgraphite2.dll
+│   libharfbuzz-0.dll
+│   libiconv-2.dll
+│   libicudt75.dll
+│   libicuin75.dll
+│   libicuuc75.dll
+│   libidn2-0.dll
+│   libintl-8.dll
+│   libjbig-0.dll
+│   libjpeg-8.dll
+│   libleptonica-6.dll
+│   libLerc.dll
+│   liblz4.dll
+│   liblzma-5.dll
+│   libopenjp2-7.dll
+│   libpango-1.0-0.dll
+│   libpangocairo-1.0-0.dll
+│   libpangoft2-1.0-0.dll
+│   libpangowin32-1.0-0.dll
+│   libpcre2-8-0.dll
+│   libpixman-1-0.dll
+│   libpng16-16.dll
+│   libpsl-5.dll
+│   libsharpyuv-0.dll
+│   libssh2-1.dll
+│   libstdc++-6.dll
+│   libtesseract-5.dll
+│   libthai-0.dll
+│   libtiff-6.dll
+│   libunistring-5.dll
+│   libwebp-7.dll
+│   libwebpmux-3.dll
+│   libwinpthread-1.dll
+│   libzstd.dll
+│   lstmeval.1.html
+│   lstmeval.exe
+│   lstmtraining.1.html
+│   lstmtraining.exe
+│   merge_unicharsets.1.html
+│   merge_unicharsets.exe
+│   mftraining.1.html
+│   mftraining.exe
+│   set_unicharset_properties.1.html
+│   set_unicharset_properties.exe
+│   shapeclustering.1.html
+│   shapeclustering.exe
+│   tesseract-uninstall.exe
+│   tesseract.1.html
+│   tesseract.exe
+│   text2image.1.html
+│   text2image.exe
+│   unicharambigs.5.html
+│   unicharset.5.html
+│   unicharset_extractor.1.html
+│   unicharset_extractor.exe
+│   winpath.exe
+│   wordlist2dawg.1.html
+│   wordlist2dawg.exe
+│   zlib1.dll
+│
+├───$PLUGINSDIR
+│       INetC.dll
+│       LangDLL.dll
+│       modern-header.bmp
+│       modern-wizard.bmp
+│       nsDialogs.dll
+│       StartMenu.dll
+│       System.dll
+│       UserInfo.dll
+│
+├───doc
+│       AUTHORS
+│       LICENSE
+│       README.md
+│
+└───tessdata
+    │   eng.traineddata
+    │   jaxb-api-2.3.1.jar
+    │   pdf.ttf
+    │   piccolo2d-core-3.0.1.jar
+    │   piccolo2d-extras-3.0.1.jar
+    │   ScrollView.jar
+    │
+    ├───configs
+    │       alto
+    │       ambigs.train
+    │       api_config
+    │       bigram
+    │       box.train
+    │       box.train.stderr
+    │       digits
+    │       get.images
+    │       hocr
+    │       inter
+    │       kannada
+    │       linebox
+    │       logfile
+    │       lstm.train
+    │       lstmbox
+    │       lstmdebug
+    │       makebox
+    │       page
+    │       pdf
+    │       quiet
+    │       rebox
+    │       strokewidth
+    │       tsv
+    │       txt
+    │       unlv
+    │       wordstrbox
+    │
+    └───tessconfigs
+            batch
+            batch.nochop
+            matdemo
+            msdemo
+            nobatch
+            segdemo
