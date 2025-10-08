@@ -1,0 +1,1768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>eCourts Browser Automation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="flex items-center justify-center min-h-screen">
+        <div class="text-center">
+            <!-- Title -->
+            <h1 class="text-3xl font-bold text-gray-800 mb-8">
+                <i class="fas fa-gavel text-blue-600 mr-2"></i>
+                eCourts Browser Automation
+            </h1>
+            
+            <!-- Start Session Button -->
+            <button id="startBtn" onclick="startSession()" 
+                    class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded-lg shadow-lg transition duration-200 transform hover:scale-105">
+                <i class="fas fa-play mr-2"></i>
+                Start Session
+            </button>
+            
+            <!-- Stop Session Button (hidden initially) -->
+            <button id="stopBtn" onclick="stopSession()" 
+                    class="bg-red-600 hover:bg-red-700 text-white font-bold py-4 px-8 rounded-lg shadow-lg transition duration-200 transform hover:scale-105 ml-4" 
+                    style="display: none;">
+                <i class="fas fa-stop mr-2"></i>
+                Stop Session
+            </button>
+            
+            <!-- Status Display -->
+            <div id="status" class="mt-8 p-4 rounded-lg" style="display: none;">
+                <!-- Status messages will appear here -->
+            </div>
+            
+            <!-- Step-by-step Selection Interface (hidden initially) -->
+            <div id="selectionSteps" class="mt-8 max-w-7xl mx-auto" style="display: none;">
+                <h2 class="text-2xl font-bold text-gray-800 text-center mb-6">
+                    <i class="fas fa-list-ol text-blue-600 mr-2"></i>
+                    Select Location: State → District → Court Complex
+                </h2>
+                
+                <!-- Three Column Layout -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Column 1: State Selection -->
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4 text-center">
+                            <i class="fas fa-map-marker-alt text-blue-600 mr-2"></i>
+                            Step 1: Select State
+                        </h3>
+                        
+                        <div id="stateLoading" class="text-center py-8">
+                            <i class="fas fa-spinner fa-spin mr-2 text-blue-600"></i>
+                            <span class="text-gray-600">Loading states...</span>
+                        </div>
+                        
+                        <div id="stateSelection" style="display: none;">
+                            <div class="space-y-2 max-h-96 overflow-y-auto">
+                                <!-- States will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Column 2: District Selection -->
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4 text-center">
+                            <i class="fas fa-building text-green-600 mr-2"></i>
+                            Step 2: Select District
+                        </h3>
+                        
+                        <div id="districtPlaceholder" class="text-center py-8 text-gray-400">
+                            <i class="fas fa-arrow-left mr-2"></i>
+                            Select a state first
+                        </div>
+                        
+                        <div id="districtLoading" class="text-center py-8" style="display: none;">
+                            <i class="fas fa-spinner fa-spin mr-2 text-green-600"></i>
+                            <span class="text-gray-600">Loading districts...</span>
+                        </div>
+                        
+                        <div id="districtSelection" style="display: none;">
+                            <div class="space-y-2 max-h-96 overflow-y-auto">
+                                <!-- Districts will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Column 3: Court Complex Selection -->
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4 text-center">
+                            <i class="fas fa-university text-purple-600 mr-2"></i>
+                            Step 3: Select Court Complex
+                        </h3>
+                        
+                        <div id="courtPlaceholder" class="text-center py-8 text-gray-400">
+                            <i class="fas fa-arrow-left mr-2"></i>
+                            Select a district first
+                        </div>
+                        
+                        <div id="courtLoading" class="text-center py-8" style="display: none;">
+                            <i class="fas fa-spinner fa-spin mr-2 text-purple-600"></i>
+                            <span class="text-gray-600">Loading court complexes...</span>
+                        </div>
+                        
+                        <div id="courtSelection" style="display: none;">
+                            <div class="space-y-2 max-h-96 overflow-y-auto">
+                                <!-- Court complexes will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Completion Message -->
+                <div id="completionStep" class="mt-6 bg-green-50 border border-green-200 rounded-lg p-6 text-center" style="display: none;">
+                    <h3 class="text-xl font-semibold text-green-800 mb-2">
+                        <i class="fas fa-check-circle text-green-600 mr-2"></i>
+                        Setup Complete!
+                    </h3>
+                    <p class="text-green-700 mb-4">All selections completed. Ready for case search functionality.</p>
+                    <div class="mt-4">
+                        <button onclick="clickCaseNumber()" 
+                                class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-200 flex items-center justify-center mx-auto">
+                            <i class="fa fa-info mr-2" aria-hidden="true"></i>
+                            Continue to Case Number
+                        </button>
+                    </div>
+                    <div id="filingNumberResult" class="mt-4" style="display: none;"></div>
+                </div>
+                
+                <!-- Case Number Input Form -->
+                <div id="caseInputForm" class="mt-6" style="display: none;">
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                        <h3 class="text-xl font-semibold text-blue-800 mb-4 text-center">
+                            <i class="fas fa-search text-blue-600 mr-2"></i>
+                            Enter Case Details
+                        </h3>
+                        
+                        <form class="space-y-4">
+                            <div class="grid grid-cols-1 gap-4">
+                                <div>
+                                    <label for="caseType" class="block text-sm font-medium text-gray-700 mb-2">
+                                        <span class="text-red-500">*</span> Case Type
+                                    </label>
+                                    <select id="caseType" name="caseType" required 
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="">Select Case Type</option>
+                                        <!-- Case types will be loaded here -->
+                                    </select>
+                                </div>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label for="caseNumber" class="block text-sm font-medium text-gray-700 mb-2">
+                                            <span class="text-red-500">*</span> Case Number
+                                        </label>
+                                        <input type="text" id="caseNumber" name="caseNumber" 
+                                               maxlength="7" required 
+                                               placeholder="Enter Case Number"
+                                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    </div>
+                                    
+                                    <div>
+                                        <label for="caseYear" class="block text-sm font-medium text-gray-700 mb-2">
+                                            <span class="text-red-500">*</span> Year
+                                        </label>
+                                        <input type="text" id="caseYear" name="caseYear" 
+                                               maxlength="4" required 
+                                               placeholder="Enter Year (e.g., 2024)"
+                                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4">
+                                <button type="button" onclick="fetchCaptcha()" 
+                                        class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition duration-200">
+                                    <i class="fas fa-image mr-2"></i>
+                                    Fetch Captcha
+                                </button>
+                            </div>
+                            
+                            <!-- Captcha Section -->
+                            <div id="captchaSection" class="mt-4" style="display: none;">
+                                <div class="bg-gray-50 border border-gray-300 rounded-lg p-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        <span class="text-red-500">*</span> Captcha
+                                    </label>
+                                    
+                                    <div class="flex items-center space-x-4 mb-3">
+                                        <div id="captchaImageContainer" class="border border-gray-300 rounded">
+                                            <!-- Captcha image will be loaded here -->
+                                        </div>
+                                        <button type="button" onclick="refreshCaptcha()" 
+                                                class="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded transition duration-200">
+                                            <i class="fas fa-sync-alt mr-1"></i> Refresh
+                                        </button>
+                                    </div>
+                                    
+                                    <div class="flex items-center space-x-2">
+                                        <input type="text" id="captchaCode" name="captchaCode" 
+                                               maxlength="6" required 
+                                               placeholder="Enter Captcha"
+                                               class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        
+                                        <button type="button" onclick="recognizeCaptcha()" 
+                                                class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded transition duration-200">
+                                            <i class="fas fa-eye mr-1"></i>
+                                            OCR
+                                        </button>
+                                        
+                                        <button type="button" onclick="submitCaseSearch()" 
+                                                class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded transition duration-200">
+                                            <i class="fas fa-search mr-2"></i>
+                                            Go
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div id="searchResult" class="mt-4" style="display: none;"></div>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Case Search Results Preview Section -->
+                <div id="caseSearchResultsSection" class="bg-white rounded-lg shadow-lg p-6" style="display: none;">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">
+                        <i class="fas fa-search mr-2"></i>
+                        Case Search Results Found
+                    </h2>
+                    
+                    <div id="searchResultsInfo" class="mb-4 p-4 bg-blue-50 rounded-lg">
+                        <!-- Search results summary will be shown here -->
+                    </div>
+                    
+                    <div id="searchResultsTable" class="overflow-x-auto">
+                        <!-- Search results table will be populated here -->
+                    </div>
+                    
+                    <div class="mt-6 text-center">
+                        <button type="button" onclick="proceedToProcessing()" 
+                                id="proceedBtn"
+                                class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded transition duration-200">
+                            <i class="fas fa-arrow-right mr-2"></i>
+                            Proceed to Extract Detailed Information
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Case Results Processing Section -->
+                <div id="caseResultsSection" class="bg-white rounded-lg shadow-lg p-6" style="display: none;">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">
+                        <i class="fas fa-list-alt mr-2"></i>
+                        Case Results Processing
+                    </h2>
+                    
+                    <div class="mb-4">
+                        <button type="button" onclick="processCaseResults()" 
+                                id="processResultsBtn"
+                                class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded transition duration-200">
+                            <i class="fas fa-cogs mr-2"></i>
+                            Process All Case Results
+                        </button>
+                        
+                        <button type="button" onclick="debugCurrentPage()" 
+                                id="debugBtn"
+                                class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded transition duration-200 ml-2">
+                            <i class="fas fa-bug mr-2"></i>
+                            Debug Current Page
+                        </button>
+                    </div>
+                    
+                    <div id="casesProcessingStatus" class="mt-4" style="display: none;"></div>
+                    
+                    <!-- Case Details Display -->
+                    <div id="caseDetailsContainer" class="mt-6" style="display: none;">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                            <i class="fas fa-folder-open mr-2"></i>
+                            Extracted Case Details
+                        </h3>
+                        <div id="caseDetailsList" class="space-y-6">
+                            <!-- Case details will be populated here -->
+                        </div>
+                    </div>
+                    
+                    <!-- Downloaded PDFs Section -->
+                    <div id="downloadsSection" class="mt-8 bg-gray-50 rounded-lg p-6" style="display: none;">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold text-gray-800">
+                                <i class="fas fa-download mr-2"></i>Downloaded PDFs
+                            </h3>
+                            <button onclick="refreshPDFsList()" 
+                                    class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm">
+                                <i class="fas fa-refresh mr-1"></i>Refresh
+                            </button>
+                        </div>
+                        <div id="downloadsList" class="space-y-2">
+                            <!-- Downloaded PDFs will be listed here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================
+        // AUTOMATIC BROWSER CLEANUP
+        // ============================
+        
+        // Track if cleanup has been called to avoid duplicate calls
+        let cleanupCalled = false;
+        
+        // Function to cleanup browser session
+        async function cleanupBrowserSession() {
+            if (cleanupCalled) return;
+            cleanupCalled = true;
+            
+            try {
+                console.log('🧹 Cleaning up browser session...');
+                
+                // Use fetch with keepalive to ensure request completes even if page is unloading
+                await fetch('/cleanup-session', {
+                    method: 'GET',
+                    keepalive: true,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                console.log('✅ Browser cleanup request sent');
+            } catch (error) {
+                console.warn('⚠️ Browser cleanup failed:', error);
+            }
+        }
+        
+        // Handle page unload (when user closes tab/window or navigates away)
+        window.addEventListener('beforeunload', (event) => {
+            cleanupBrowserSession();
+        });
+        
+        // Handle page hide (when tab becomes hidden or page is being unloaded)
+        window.addEventListener('pagehide', (event) => {
+            cleanupBrowserSession();
+        });
+        
+        // Handle visibility change (when user switches tabs or minimizes)
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') {
+                // Don't cleanup on tab switch, only when page is actually unloading
+                // This prevents unnecessary cleanup when user just switches tabs
+            }
+        });
+        
+        // Cleanup on page reload
+        window.addEventListener('unload', (event) => {
+            cleanupBrowserSession();
+        });
+        
+        // Optional: Add manual cleanup button for testing
+        function manualCleanup() {
+            cleanupCalled = false; // Reset flag for manual cleanup
+            cleanupBrowserSession();
+        }
+        
+        // ============================
+        // EXISTING FUNCTIONS
+        // ============================
+        
+        async function startSession() {
+            const startBtn = document.getElementById('startBtn');
+            const stopBtn = document.getElementById('stopBtn');
+            const statusDiv = document.getElementById('status');
+            
+            // Show loading state
+            startBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Starting...';
+            startBtn.disabled = true;
+            
+            try {
+                const response = await fetch('/start-session', {
+                    method: 'POST'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    statusDiv.innerHTML = `
+                        <div class="bg-green-50 border border-green-200 p-4 rounded-lg">
+                            <h3 class="text-green-800 font-semibold mb-2">
+                                <i class="fas fa-check-circle mr-2"></i>
+                                Session Started Successfully!
+                            </h3>
+                            <p class="text-green-700 text-sm mb-2">${result.message}</p>
+                            <div class="text-xs text-green-600">
+                                <p><strong>Page:</strong> ${result.page_title}</p>
+                                <p><strong>URL:</strong> ${result.current_url}</p>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Show stop button, hide start button
+                    startBtn.style.display = 'none';
+                    stopBtn.style.display = 'inline-block';
+                    
+                    // Start the step-by-step selection process
+                    await startStepByStepSelection();
+                } else {
+                    statusDiv.innerHTML = `
+                        <div class="bg-red-50 border border-red-200 p-4 rounded-lg">
+                            <h3 class="text-red-800 font-semibold mb-2">
+                                <i class="fas fa-exclamation-triangle mr-2"></i>
+                                Session Failed
+                            </h3>
+                            <p class="text-red-700 text-sm">${result.error}</p>
+                            ${result.page_title ? `<p class="text-xs text-red-600 mt-2">Page: ${result.page_title}</p>` : ''}
+                        </div>
+                    `;
+                    
+                    // Reset start button
+                    startBtn.innerHTML = '<i class="fas fa-play mr-2"></i>Start Session';
+                    startBtn.disabled = false;
+                }
+                
+                statusDiv.style.display = 'block';
+                
+            } catch (error) {
+                statusDiv.innerHTML = `
+                    <div class="bg-red-50 border border-red-200 p-4 rounded-lg">
+                        <h3 class="text-red-800 font-semibold mb-2">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>
+                            Connection Error
+                        </h3>
+                        <p class="text-red-700 text-sm">Failed to connect to server: ${error.message}</p>
+                    </div>
+                `;
+                statusDiv.style.display = 'block';
+                
+                // Reset start button
+                startBtn.innerHTML = '<i class="fas fa-play mr-2"></i>Start Session';
+                startBtn.disabled = false;
+            }
+        }
+        
+        async function stopSession() {
+            const startBtn = document.getElementById('startBtn');
+            const stopBtn = document.getElementById('stopBtn');
+            const statusDiv = document.getElementById('status');
+            
+            // Show loading state
+            stopBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Stopping...';
+            stopBtn.disabled = true;
+            
+            try {
+                const response = await fetch('/stop-session', {
+                    method: 'POST'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    statusDiv.innerHTML = `
+                        <div class="bg-blue-50 border border-blue-200 p-4 rounded-lg">
+                            <h3 class="text-blue-800 font-semibold mb-2">
+                                <i class="fas fa-info-circle mr-2"></i>
+                                Session Stopped
+                            </h3>
+                            <p class="text-blue-700 text-sm">${result.message}</p>
+                        </div>
+                    `;
+                } else {
+                    statusDiv.innerHTML = `
+                        <div class="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
+                            <h3 class="text-yellow-800 font-semibold mb-2">
+                                <i class="fas fa-exclamation-triangle mr-2"></i>
+                                Stop Warning
+                            </h3>
+                            <p class="text-yellow-700 text-sm">${result.error}</p>
+                        </div>
+                    `;
+                }
+                
+                // Show start button, hide stop button
+                startBtn.style.display = 'inline-block';
+                startBtn.innerHTML = '<i class="fas fa-play mr-2"></i>Start Session';
+                startBtn.disabled = false;
+                stopBtn.style.display = 'none';
+                
+            } catch (error) {
+                statusDiv.innerHTML = `
+                    <div class="bg-red-50 border border-red-200 p-4 rounded-lg">
+                        <h3 class="text-red-800 font-semibold mb-2">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>
+                            Error Stopping Session
+                        </h3>
+                        <p class="text-red-700 text-sm">${error.message}</p>
+                    </div>
+                `;
+                
+                // Reset buttons anyway
+                startBtn.style.display = 'inline-block';
+                startBtn.innerHTML = '<i class="fas fa-play mr-2"></i>Start Session';
+                startBtn.disabled = false;
+                stopBtn.style.display = 'none';
+            }
+        }
+        
+        // Step-by-step selection functions
+        async function startStepByStepSelection() {
+            const selectionDiv = document.getElementById('selectionSteps');
+            
+            // Show the selection interface
+            selectionDiv.style.display = 'block';
+            
+            // Load states
+            await loadStates();
+        }
+        
+        async function loadStates() {
+            try {
+                const response = await fetch('/get-states', { method: 'POST' });
+                const result = await response.json();
+                
+                const stateLoading = document.getElementById('stateLoading');
+                const stateSelection = document.getElementById('stateSelection');
+                
+                if (result.success) {
+                    stateLoading.style.display = 'none';
+                    
+                    // Populate states in column format with better styling
+                    const stateContainer = stateSelection.querySelector('.space-y-2');
+                    stateContainer.innerHTML = result.states.map(state => `
+                        <button onclick="selectState('${state.value}', '${state.text}')" 
+                                class="state-btn w-full p-3 text-left bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition duration-200 flex justify-between items-center">
+                            <div>
+                                <div class="font-medium text-gray-800">${state.text}</div>
+                                <div class="text-xs text-gray-500">Code: ${state.value}</div>
+                            </div>
+                            <i class="fas fa-chevron-right text-gray-400"></i>
+                        </button>
+                    `).join('');
+                    
+                    stateSelection.style.display = 'block';
+                } else {
+                    stateLoading.innerHTML = `<div class="text-red-600 text-center">Error: ${result.error}</div>`;
+                }
+            } catch (error) {
+                document.getElementById('stateLoading').innerHTML = `<div class="text-red-600 text-center">Error: ${error.message}</div>`;
+            }
+        }
+        
+        async function selectState(stateValue, stateName) {
+            const districtPlaceholder = document.getElementById('districtPlaceholder');
+            const districtLoading = document.getElementById('districtLoading');
+            const courtPlaceholder = document.getElementById('courtPlaceholder');
+            
+            // Hide placeholders and show loading
+            districtPlaceholder.style.display = 'none';
+            districtLoading.style.display = 'block';
+            
+            // Reset court section
+            document.getElementById('courtSelection').style.display = 'none';
+            courtPlaceholder.style.display = 'block';
+            document.getElementById('completionStep').style.display = 'none';
+            
+            // Update state selection styling - blue for selected, gray for others
+            const stateButtons = document.querySelectorAll('.state-btn');
+            stateButtons.forEach(btn => {
+                btn.classList.remove('bg-blue-100', 'border-blue-400', 'text-blue-800');
+                btn.classList.add('bg-gray-100', 'border-gray-300', 'text-gray-800');
+            });
+            
+            // Mark selected state as blue
+            event.target.classList.remove('bg-gray-100', 'border-gray-300', 'text-gray-800');
+            event.target.classList.add('bg-blue-100', 'border-blue-400', 'text-blue-800');
+            
+            try {
+                const formData = new FormData();
+                formData.append('state_value', stateValue);
+                
+                const response = await fetch('/select-state', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    districtLoading.style.display = 'none';
+                    
+                    // Populate districts in column format
+                    const districtSelection = document.getElementById('districtSelection');
+                    const districtContainer = districtSelection.querySelector('.space-y-2');
+                    
+                    districtContainer.innerHTML = result.districts.map(district => `
+                        <button onclick="selectDistrict('${district.value}', '${district.text}')" 
+                                class="district-btn w-full p-3 text-left bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition duration-200 flex justify-between items-center">
+                            <div>
+                                <div class="font-medium text-gray-800">${district.text}</div>
+                                <div class="text-xs text-gray-500">Code: ${district.value}</div>
+                            </div>
+                            <i class="fas fa-chevron-right text-gray-400"></i>
+                        </button>
+                    `).join('');
+                    
+                    districtSelection.style.display = 'block';
+                } else {
+                    districtLoading.innerHTML = `<div class="text-red-600 text-center">Error: ${result.error}</div>`;
+                }
+            } catch (error) {
+                districtLoading.innerHTML = `<div class="text-red-600 text-center">Error: ${error.message}</div>`;
+            }
+        }
+        
+        async function selectDistrict(districtValue, districtName) {
+            const courtPlaceholder = document.getElementById('courtPlaceholder');
+            const courtLoading = document.getElementById('courtLoading');
+            
+            // Hide placeholder and show loading
+            courtPlaceholder.style.display = 'none';
+            courtLoading.style.display = 'block';
+            
+            // Reset completion
+            document.getElementById('completionStep').style.display = 'none';
+            
+            // Update district selection styling - blue for selected, gray for others
+            const districtButtons = document.querySelectorAll('.district-btn');
+            districtButtons.forEach(btn => {
+                btn.classList.remove('bg-blue-100', 'border-blue-400', 'text-blue-800');
+                btn.classList.add('bg-gray-100', 'border-gray-300', 'text-gray-800');
+            });
+            
+            // Mark selected district as blue
+            event.target.classList.remove('bg-gray-100', 'border-gray-300', 'text-gray-800');
+            event.target.classList.add('bg-blue-100', 'border-blue-400', 'text-blue-800');
+            
+            try {
+                const formData = new FormData();
+                formData.append('district_value', districtValue);
+                
+                const response = await fetch('/select-district', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    courtLoading.style.display = 'none';
+                    
+                    // Populate court complexes in column format
+                    const courtSelection = document.getElementById('courtSelection');
+                    const courtContainer = courtSelection.querySelector('.space-y-2');
+                    
+                    courtContainer.innerHTML = result.courts.map(court => `
+                        <button onclick="selectCourt('${court.value}', '${court.text}')" 
+                                class="court-btn w-full p-3 text-left bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition duration-200 flex justify-between items-center">
+                            <div>
+                                <div class="font-medium text-gray-800">${court.text}</div>
+                                <div class="text-xs text-gray-500">Code: ${court.value}</div>
+                            </div>
+                            <i class="fas fa-chevron-right text-gray-400"></i>
+                        </button>
+                    `).join('');
+                    
+                    courtSelection.style.display = 'block';
+                } else {
+                    courtLoading.innerHTML = `<div class="text-red-600 text-center">Error: ${result.error}</div>`;
+                }
+            } catch (error) {
+                courtLoading.innerHTML = `<div class="text-red-600 text-center">Error: ${error.message}</div>`;
+            }
+        }
+        
+        async function selectCourt(courtValue, courtName) {
+            const completionStep = document.getElementById('completionStep');
+            
+            // Update court selection styling - blue for selected, gray for others
+            const courtButtons = document.querySelectorAll('.court-btn');
+            courtButtons.forEach(btn => {
+                btn.classList.remove('bg-blue-100', 'border-blue-400', 'text-blue-800');
+                btn.classList.add('bg-gray-100', 'border-gray-300', 'text-gray-800');
+            });
+            
+            // Mark selected court as blue
+            event.target.classList.remove('bg-gray-100', 'border-gray-300', 'text-gray-800');
+            event.target.classList.add('bg-blue-100', 'border-blue-400', 'text-blue-800');
+            
+            try {
+                const formData = new FormData();
+                formData.append('court_value', courtValue);
+                
+                const response = await fetch('/select-court', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Show completion message
+                    completionStep.style.display = 'block';
+                    completionStep.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    alert(`Error selecting court: ${result.error}`);
+                }
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+            }
+        }
+        
+        async function clickCaseNumber() {
+            const resultDiv = document.getElementById('filingNumberResult');
+            const caseInputForm = document.getElementById('caseInputForm');
+            
+            // Show loading state
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = `
+                <div class="flex items-center justify-center py-4">
+                    <i class="fas fa-spinner fa-spin text-blue-600 mr-2"></i>
+                    <span class="text-blue-600">Clicking Case Number tab...</span>
+                </div>
+            `;
+            
+            try {
+                const response = await fetch('/click-case-number', { method: 'POST' });
+                const result = await response.json();
+                
+                if (result.success) {
+                    resultDiv.innerHTML = `
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
+                            <div class="flex items-center justify-center">
+                                <i class="fas fa-check-circle text-blue-500 mr-2"></i>
+                                <span class="text-blue-700 font-medium">Case Number tab opened successfully!</span>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Show case input form and load case types
+                    setTimeout(async () => {
+                        caseInputForm.style.display = 'block';
+                        caseInputForm.scrollIntoView({ behavior: 'smooth' });
+                        await loadCaseTypes();
+                    }, 1000);
+                    
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="bg-red-50 border border-red-200 rounded-lg p-4 mt-4">
+                            <div class="flex items-center justify-center">
+                                <i class="fas fa-times-circle text-red-500 mr-2"></i>
+                                <span class="text-red-700 font-medium">Error: ${result.error}</span>
+                            </div>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="bg-red-50 border border-red-200 rounded-lg p-4 mt-4">
+                        <div class="flex items-center justify-center">
+                            <i class="fas fa-times-circle text-red-500 mr-2"></i>
+                            <span class="text-red-700 font-medium">Error: ${error.message}</span>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+        
+        async function loadCaseTypes() {
+            const caseTypeSelect = document.getElementById('caseType');
+            
+            // Show loading in dropdown
+            caseTypeSelect.innerHTML = '<option value="">Loading case types...</option>';
+            
+            try {
+                const response = await fetch('/get-case-types', { method: 'POST' });
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Populate case types dropdown
+                    caseTypeSelect.innerHTML = '<option value="">Select Case Type</option>';
+                    result.case_types.forEach(caseType => {
+                        const option = document.createElement('option');
+                        option.value = caseType.value;
+                        option.textContent = caseType.text;
+                        caseTypeSelect.appendChild(option);
+                    });
+                    
+                    console.log(`✅ Loaded ${result.count} case types`);
+                } else {
+                    caseTypeSelect.innerHTML = '<option value="">Error loading case types</option>';
+                    console.error('Error loading case types:', result.error);
+                }
+            } catch (error) {
+                caseTypeSelect.innerHTML = '<option value="">Error loading case types</option>';
+                console.error('Error loading case types:', error);
+            }
+        }
+        
+        async function fetchCaptcha() {
+            const captchaSection = document.getElementById('captchaSection');
+            const captchaContainer = document.getElementById('captchaImageContainer');
+            
+            // Show captcha section and loading
+            captchaSection.style.display = 'block';
+            captchaContainer.innerHTML = `
+                <div class="flex items-center justify-center p-4">
+                    <i class="fas fa-spinner fa-spin text-blue-600 mr-2"></i>
+                    <span class="text-blue-600">Loading captcha from eCourts...</span>
+                </div>
+            `;
+            
+            try {
+                const response = await fetch('/fetch-captcha', { method: 'POST' });
+                const result = await response.json();
+                
+                if (result.success) {
+                    captchaContainer.innerHTML = `
+                        <img src="${result.captcha_url}" alt="Captcha Image" 
+                             class="border border-gray-300 rounded" 
+                             style="width: 120px; height: auto;">
+                    `;
+                } else {
+                    captchaContainer.innerHTML = `
+                        <div class="bg-red-50 border border-red-200 rounded p-3">
+                            <span class="text-red-700 text-sm">Error: ${result.error}</span>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                captchaContainer.innerHTML = `
+                    <div class="bg-red-50 border border-red-200 rounded p-3">
+                        <span class="text-red-700 text-sm">Error: ${error.message}</span>
+                    </div>
+                `;
+            }
+        }
+        
+        async function refreshCaptcha() {
+            const captchaContainer = document.getElementById('captchaImageContainer');
+            
+            // Show loading state
+            captchaContainer.innerHTML = `
+                <div class="flex items-center justify-center p-4">
+                    <i class="fas fa-spinner fa-spin text-blue-600 mr-2"></i>
+                    <span class="text-blue-600">Refreshing captcha...</span>
+                </div>
+            `;
+            
+            try {
+                const response = await fetch('/refresh-captcha', { method: 'POST' });
+                const result = await response.json();
+                
+                if (result.success) {
+                    captchaContainer.innerHTML = `
+                        <img src="${result.captcha_url}" alt="Captcha Image" 
+                             class="border border-gray-300 rounded" 
+                             style="width: 120px; height: auto;">
+                    `;
+                    
+                    // Clear the captcha input field
+                    document.getElementById('captchaCode').value = '';
+                } else {
+                    captchaContainer.innerHTML = `
+                        <div class="bg-red-50 border border-red-200 rounded p-3">
+                            <span class="text-red-700 text-sm">Error: ${result.error}</span>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                captchaContainer.innerHTML = `
+                    <div class="bg-red-50 border border-red-200 rounded p-3">
+                        <span class="text-red-700 text-sm">Error: ${error.message}</span>
+                    </div>
+                `;
+            }
+        }
+        
+        async function recognizeCaptcha() {
+            const captchaContainer = document.getElementById('captchaImageContainer');
+            const captchaInput = document.getElementById('captchaCode');
+            
+            // Check if captcha image is loaded
+            const captchaImg = captchaContainer.querySelector('img');
+            if (!captchaImg) {
+                alert('Please fetch the captcha image first');
+                return;
+            }
+            
+            // Show loading state
+            const originalText = captchaInput.placeholder;
+            captchaInput.placeholder = 'Recognizing...';
+            captchaInput.disabled = true;
+            
+            try {
+                // Get the image data from the captcha image
+                const imageData = captchaImg.src;
+                
+                const formData = new FormData();
+                formData.append('image_data', imageData);
+                
+                const response = await fetch('/recognize-captcha', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success && result.text) {
+                    // Fill the captcha input with recognized text
+                    captchaInput.value = result.text;
+                    captchaInput.placeholder = `OCR: ${result.confidence}% confidence`;
+                    
+                    // Show success message
+                    const successMsg = document.createElement('div');
+                    successMsg.className = 'text-green-600 text-sm mt-1';
+                    successMsg.innerHTML = `<i class="fas fa-check mr-1"></i>OCR recognized: "${result.text}" (${result.confidence}% confidence)`;
+                    
+                    // Remove any existing message
+                    const existingMsg = captchaContainer.parentNode.querySelector('.text-green-600, .text-red-600');
+                    if (existingMsg) existingMsg.remove();
+                    
+                    captchaContainer.parentNode.appendChild(successMsg);
+                    
+                    setTimeout(() => successMsg.remove(), 5000);
+                    
+                } else {
+                    captchaInput.placeholder = 'OCR failed - enter manually';
+                    
+                    // Show error message
+                    const errorMsg = document.createElement('div');
+                    errorMsg.className = 'text-red-600 text-sm mt-1';
+                    errorMsg.innerHTML = `<i class="fas fa-times mr-1"></i>OCR failed: ${result.error || 'Unable to recognize text'}`;
+                    
+                    // Remove any existing message
+                    const existingMsg = captchaContainer.parentNode.querySelector('.text-green-600, .text-red-600');
+                    if (existingMsg) existingMsg.remove();
+                    
+                    captchaContainer.parentNode.appendChild(errorMsg);
+                    
+                    setTimeout(() => errorMsg.remove(), 5000);
+                }
+                
+            } catch (error) {
+                captchaInput.placeholder = 'OCR error - enter manually';
+                alert(`OCR Error: ${error.message}`);
+            } finally {
+                captchaInput.disabled = false;
+            }
+        }
+        
+        // Track captcha retry attempts
+        let captchaRetryCount = 0;
+        
+        async function submitCaseSearch() {
+            const caseType = document.getElementById('caseType').value;
+            const caseNumber = document.getElementById('caseNumber').value;
+            const caseYear = document.getElementById('caseYear').value;
+            const captchaCode = document.getElementById('captchaCode').value;
+            const resultDiv = document.getElementById('searchResult');
+            
+            // Validation
+            if (!caseType || !caseNumber || !caseYear || !captchaCode) {
+                alert('Please fill in all required fields');
+                return;
+            }
+            
+            // Show loading
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = `
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div class="flex items-center justify-center">
+                        <i class="fas fa-spinner fa-spin text-blue-600 mr-2"></i>
+                        <span class="text-blue-700 font-medium">Submitting case search and validating captcha...</span>
+                    </div>
+                    <p class="text-sm text-blue-600 mt-2 text-center">Please wait while we process your request...</p>
+                </div>
+            `;
+            
+            try {
+                const formData = new FormData();
+                formData.append('case_type', caseType);
+                formData.append('case_number', caseNumber);
+                formData.append('case_year', caseYear);
+                formData.append('captcha_code', captchaCode);
+                
+                const response = await fetch('/submit-case-search', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Reset retry counter on success
+                    captchaRetryCount = 0;
+                    
+                    resultDiv.innerHTML = `
+                        <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                            <div class="flex items-center justify-center">
+                                <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                                <span class="text-green-700 font-medium">Case search submitted successfully!</span>
+                            </div>
+                            <p class="text-sm text-green-600 mt-2 text-center">Fetching search results...</p>
+                        </div>
+                    `;
+                    
+                    // Fetch and show search results preview
+                    setTimeout(async () => {
+                        await fetchSearchResultsPreview();
+                    }, 2000);
+                } else {
+                    // Check if it's an invalid captcha error
+                    if (result.error_type === 'invalid_captcha') {
+                        captchaRetryCount++;
+                        
+                        resultDiv.innerHTML = `
+                            <div class="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                                <div class="flex items-center justify-center">
+                                    <i class="fas fa-exclamation-triangle text-orange-500 mr-2"></i>
+                                    <span class="text-orange-700 font-medium">Invalid Captcha (Attempt ${captchaRetryCount})</span>
+                                </div>
+                                <p class="text-sm text-orange-600 mt-2 text-center">
+                                    The captcha you entered was incorrect. Fetching a new captcha...
+                                </p>
+                                <div class="mt-3 text-center">
+                                    <div class="inline-flex items-center px-3 py-1 rounded-full text-xs bg-orange-100 text-orange-800">
+                                        <i class="fas fa-info-circle mr-1"></i>
+                                        Tip: Look carefully at the new captcha characters
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        
+                        // Automatically fetch new captcha and clear the input
+                        setTimeout(() => {
+                            document.getElementById('captchaCode').value = '';
+                            document.getElementById('captchaCode').placeholder = 'Enter new captcha...';
+                            fetchCaptcha();
+                            
+                            // Focus on captcha input for user convenience
+                            setTimeout(() => {
+                                document.getElementById('captchaCode').focus();
+                            }, 1000);
+                        }, 2000);
+                        
+                    } else {
+                        resultDiv.innerHTML = `
+                            <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                                <div class="flex items-center justify-center">
+                                    <i class="fas fa-times-circle text-red-500 mr-2"></i>
+                                    <span class="text-red-700 font-medium">Error: ${result.error}</span>
+                                </div>
+                                <p class="text-sm text-red-600 mt-2 text-center">Please try again or check your input.</p>
+                            </div>
+                        `;
+                    }
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                        <div class="flex items-center justify-center">
+                            <i class="fas fa-times-circle text-red-500 mr-2"></i>
+                            <span class="text-red-700 font-medium">Error: ${error.message}</span>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // Fetch and display case search results preview
+        async function fetchSearchResultsPreview() {
+            try {
+                const response = await fetch('/get-search-results', {
+                    method: 'POST'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    displaySearchResultsPreview(result.results);
+                } else {
+                    // If preview fails, fall back to showing processing section
+                    console.error('Search results preview failed:', result.error);
+                    showCaseResultsSection();
+                }
+            } catch (error) {
+                console.error('Error fetching search results:', error);
+                // Fall back to showing processing section
+                showCaseResultsSection();
+            }
+        }
+
+        // Display the search results preview table
+        function displaySearchResultsPreview(results) {
+            const searchResultsSection = document.getElementById('caseSearchResultsSection');
+            const searchResultsInfo = document.getElementById('searchResultsInfo');
+            const searchResultsTable = document.getElementById('searchResultsTable');
+            
+            // Update info section
+            searchResultsInfo.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="flex items-center">
+                        <i class="fas fa-building text-blue-500 mr-2"></i>
+                        <span class="font-medium text-gray-700">${results.court_info}</span>
+                    </div>
+                    <div class="flex items-center">
+                        <i class="fas fa-calculator text-green-500 mr-2"></i>
+                        <span class="font-medium text-gray-700">Total Cases Found: ${results.total_cases}</span>
+                    </div>
+                </div>
+            `;
+            
+            // Create results table
+            if (results.cases.length > 0) {
+                searchResultsTable.innerHTML = `
+                    <table class="min-w-full bg-white border border-gray-200 rounded-lg overflow-hidden">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                                    Sr No
+                                </th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                                    Case Type/Number/Year
+                                </th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                                    Petitioner vs Respondent
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            ${results.cases.map(caseItem => `
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                                        ${caseItem.sr_no}
+                                    </td>
+                                    <td class="px-4 py-3 text-sm text-gray-900">
+                                        <span class="font-medium">${caseItem.case_type_number}</span>
+                                    </td>
+                                    <td class="px-4 py-3 text-sm text-gray-900">
+                                        ${caseItem.parties}
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            } else {
+                searchResultsTable.innerHTML = `
+                    <div class="text-center py-8">
+                        <i class="fas fa-search text-gray-400 text-3xl mb-4"></i>
+                        <p class="text-gray-500">No cases found</p>
+                    </div>
+                `;
+            }
+            
+            // Show the section
+            searchResultsSection.style.display = 'block';
+            searchResultsSection.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Proceed to detailed processing
+        function proceedToProcessing() {
+            // Hide preview section and show processing section
+            const searchResultsSection = document.getElementById('caseSearchResultsSection');
+            searchResultsSection.style.display = 'none';
+            
+            showCaseResultsSection();
+        }
+
+        // Show case results processing section after successful case search
+        function showCaseResultsSection() {
+            const caseResultsSection = document.getElementById('caseResultsSection');
+            caseResultsSection.style.display = 'block';
+            
+            // Scroll to the section
+            caseResultsSection.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        async function processCaseResults() {
+            const processBtn = document.getElementById('processResultsBtn');
+            const statusDiv = document.getElementById('casesProcessingStatus');
+            const detailsContainer = document.getElementById('caseDetailsContainer');
+            
+            // Show loading state
+            processBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Processing Cases...';
+            processBtn.disabled = true;
+            
+            statusDiv.innerHTML = `
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div class="flex items-center">
+                        <i class="fas fa-spinner fa-spin text-blue-500 mr-2"></i>
+                        <span class="text-blue-700 font-medium">Processing case results, please wait...</span>
+                    </div>
+                </div>
+            `;
+            statusDiv.style.display = 'block';
+            
+            try {
+                const response = await fetch('/process-case-results', {
+                    method: 'POST'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    statusDiv.innerHTML = `
+                        <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                            <h3 class="text-green-800 font-semibold mb-2">
+                                <i class="fas fa-check-circle mr-2"></i>
+                                Processing Complete!
+                            </h3>
+                            <p class="text-green-700 text-sm">${result.message}</p>
+                        </div>
+                    `;
+                    
+                    // Display case details
+                    displayCaseDetails(result.cases);
+                    
+                } else {
+                    statusDiv.innerHTML = `
+                        <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                            <h3 class="text-red-800 font-semibold mb-2">
+                                <i class="fas fa-exclamation-triangle mr-2"></i>
+                                Processing Failed
+                            </h3>
+                            <p class="text-red-700 text-sm">${result.error}</p>
+                        </div>
+                    `;
+                }
+                
+            } catch (error) {
+                statusDiv.innerHTML = `
+                    <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                        <h3 class="text-red-800 font-semibold mb-2">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>
+                            Connection Error
+                        </h3>
+                        <p class="text-red-700 text-sm">Failed to process cases: ${error.message}</p>
+                    </div>
+                `;
+            } finally {
+                // Reset button
+                processBtn.innerHTML = '<i class="fas fa-cogs mr-2"></i>Process All Case Results';
+                processBtn.disabled = false;
+            }
+        }
+
+        function displayCaseDetails(cases) {
+            const detailsContainer = document.getElementById('caseDetailsContainer');
+            const detailsList = document.getElementById('caseDetailsList');
+            
+            if (!cases || cases.length === 0) {
+                detailsList.innerHTML = `
+                    <div class="text-center text-gray-500 py-8">
+                        <i class="fas fa-inbox text-4xl mb-4"></i>
+                        <p>No case details found</p>
+                    </div>
+                `;
+                detailsContainer.style.display = 'block';
+                return;
+            }
+            
+            let casesHTML = '';
+            
+            cases.forEach((caseData, index) => {
+                const caseNumber = index + 1;
+                
+                casesHTML += `
+                    <div class="border border-gray-200 rounded-lg p-6 bg-gray-50">
+                        <h4 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">
+                            <i class="fas fa-gavel mr-2"></i>
+                            Case ${caseNumber}: ${caseData.case_type || 'Unknown Type'}
+                        </h4>
+                        
+                        <!-- Basic Information -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                            <div class="space-y-2">
+                                <h5 class="font-medium text-gray-700">
+                                    <i class="fas fa-info-circle mr-1"></i>
+                                    Basic Information
+                                </h5>
+                                <div class="text-sm space-y-1">
+                                    <p><strong>Filing Number:</strong> ${caseData.filing_number || 'N/A'}</p>
+                                    <p><strong>Filing Date:</strong> ${caseData.filing_date || 'N/A'}</p>
+                                    <p><strong>Registration Number:</strong> ${caseData.registration_number || 'N/A'}</p>
+                                    <p><strong>Registration Date:</strong> ${caseData.registration_date || 'N/A'}</p>
+                                    <p><strong>CNR Number:</strong> ${caseData.cnr_number || 'N/A'}</p>
+                                </div>
+                            </div>
+                            
+                            <div class="space-y-2">
+                                <h5 class="font-medium text-gray-700">
+                                    <i class="fas fa-calendar-alt mr-1"></i>
+                                    Case Status
+                                </h5>
+                                <div class="text-sm space-y-1">
+                                    <p><strong>First Hearing:</strong> ${caseData.first_hearing_date || 'N/A'}</p>
+                                    <p><strong>Next Hearing:</strong> ${caseData.next_hearing_date || 'N/A'}</p>
+                                    <p><strong>Case Stage:</strong> ${caseData.case_stage || 'N/A'}</p>
+                                    <p><strong>Court & Judge:</strong> ${caseData.court_and_judge || 'N/A'}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Parties -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                            <div class="space-y-2">
+                                <h5 class="font-medium text-gray-700">
+                                    <i class="fas fa-user mr-1"></i>
+                                    Petitioner
+                                </h5>
+                                <div class="text-sm bg-white p-3 rounded border">
+                                    ${caseData.petitioner || 'N/A'}
+                                </div>
+                            </div>
+                            
+                            <div class="space-y-2">
+                                <h5 class="font-medium text-gray-700">
+                                    <i class="fas fa-user-tie mr-1"></i>
+                                    Respondent
+                                </h5>
+                                <div class="text-sm bg-white p-3 rounded border">
+                                    ${caseData.respondent || 'N/A'}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Acts -->
+                        ${caseData.acts && caseData.acts.length > 0 ? `
+                            <div class="mb-6">
+                                <h5 class="font-medium text-gray-700 mb-2">
+                                    <i class="fas fa-book mr-1"></i>
+                                    Acts & Sections
+                                </h5>
+                                <div class="bg-white rounded border overflow-hidden">
+                                    <table class="w-full text-sm">
+                                        <thead class="bg-gray-100">
+                                            <tr>
+                                                <th class="text-left p-2 border-r">Act</th>
+                                                <th class="text-left p-2">Section</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${caseData.acts.map(act => `
+                                                <tr class="border-t">
+                                                    <td class="p-2 border-r">${act.act}</td>
+                                                    <td class="p-2">${act.section}</td>
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        ` : ''}
+                        
+                        <!-- Orders -->
+                        ${caseData.orders && caseData.orders.length > 0 ? `
+                            <div class="mb-6">
+                                <h5 class="font-medium text-gray-700 mb-2">
+                                    <i class="fas fa-file-pdf mr-1"></i>
+                                    Orders & Documents
+                                </h5>
+                                <div class="bg-white rounded border overflow-hidden">
+                                    <table class="w-full text-sm">
+                                        <thead class="bg-gray-100">
+                                            <tr>
+                                                <th class="text-left p-2 border-r">Order #</th>
+                                                <th class="text-left p-2 border-r">Date</th>
+                                                <th class="text-left p-2 border-r">Details</th>
+                                                <th class="text-left p-2">PDF</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${caseData.orders.map(order => `
+                                                <tr class="border-t">
+                                                    <td class="p-2 border-r">${order.order_number}</td>
+                                                    <td class="p-2 border-r">${order.order_date}</td>
+                                                    <td class="p-2 border-r">${order.order_details}</td>
+                                                    <td class="p-2">
+                                                        ${order.pdf_link ? `
+                                                            <button onclick="downloadPDF(${caseNumber}, '${order.order_number}')" 
+                                                                    class="bg-red-500 hover:bg-red-600 text-white text-xs px-2 py-1 rounded">
+                                                                <i class="fas fa-download mr-1"></i>Download PDF
+                                                            </button>
+                                                        ` : 'N/A'}
+                                                    </td>
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        ` : ''}
+                        
+                        <!-- Case History -->
+                        ${caseData.case_history && caseData.case_history.length > 0 ? `
+                            <div class="mb-4">
+                                <h5 class="font-medium text-gray-700 mb-2">
+                                    <i class="fas fa-history mr-1"></i>
+                                    Case History
+                                </h5>
+                                <div class="bg-white rounded border overflow-hidden">
+                                    <table class="w-full text-sm">
+                                        <thead class="bg-gray-100">
+                                            <tr>
+                                                <th class="text-left p-2 border-r">Judge</th>
+                                                <th class="text-left p-2 border-r">Business Date</th>
+                                                <th class="text-left p-2 border-r">Hearing Date</th>
+                                                <th class="text-left p-2">Purpose</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${caseData.case_history.map(entry => `
+                                                <tr class="border-t">
+                                                    <td class="p-2 border-r">${entry.judge}</td>
+                                                    <td class="p-2 border-r">${entry.business_date}</td>
+                                                    <td class="p-2 border-r">${entry.hearing_date}</td>
+                                                    <td class="p-2">${entry.purpose}</td>
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            });
+            
+            detailsList.innerHTML = casesHTML;
+            detailsContainer.style.display = 'block';
+            
+            // Scroll to the details
+            detailsContainer.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        async function downloadPDF(caseIndex, orderNumber) {
+            try {
+                // Show loading indicator
+                showToast(`🔍 Processing PDF for order ${orderNumber}...`, 'info');
+                
+                const response = await fetch(`/download-pdf/${caseIndex}/${orderNumber}`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    if (result.action === 'downloaded_via_chrome') {
+                        // PDF was successfully downloaded via Chrome PDF viewer
+                        showToast(`✅ PDF downloaded successfully via Chrome PDF viewer!`, 'success');
+                        
+                        // Create a download link and trigger download
+                        const downloadLink = document.createElement('a');
+                        downloadLink.href = result.download_url;
+                        downloadLink.download = result.filename;
+                        downloadLink.style.display = 'none';
+                        document.body.appendChild(downloadLink);
+                        downloadLink.click();
+                        document.body.removeChild(downloadLink);
+                        
+                        // Show success message
+                        setTimeout(() => {
+                            showToast(`📁 PDF "${result.filename}" is ready for download!`, 'success');
+                        }, 1000);
+                        
+                        // Add to downloaded files list
+                        addToDownloadsList(result.filename, result.download_url);
+                        
+                    } else if (result.action === 'download_initiated') {
+                        // Download was initiated but file not detected yet
+                        showToast(`� Download initiated for order ${orderNumber}. ${result.note}`, 'info');
+                        
+                        // Refresh PDFs list after a delay
+                        setTimeout(() => {
+                            refreshPDFsList();
+                        }, 3000);
+                        
+                    } else if (result.action === 'ready_for_download') {
+                        // PDF is ready for download (fallback method)
+                        showToast(`✅ PDF ready! Downloading ${result.filename}...`, 'success');
+                        
+                        const downloadLink = document.createElement('a');
+                        downloadLink.href = result.download_url;
+                        downloadLink.download = result.filename;
+                        downloadLink.style.display = 'none';
+                        document.body.appendChild(downloadLink);
+                        downloadLink.click();
+                        document.body.removeChild(downloadLink);
+                        
+                        addToDownloadsList(result.filename, result.download_url);
+                        
+                    } else {
+                        // Generic success
+                        showToast(`✅ ${result.message}`, 'success');
+                        
+                        if (result.note) {
+                            setTimeout(() => {
+                                showToast(`ℹ️ ${result.note}`, 'info');
+                            }, 2000);
+                        }
+                    }
+                } else {
+                    showToast(`❌ Error: ${result.error}`, 'error');
+                    
+                    if (result.note) {
+                        setTimeout(() => {
+                            showToast(`💡 ${result.note}`, 'info');
+                        }, 2000);
+                    }
+                    
+                    console.error('PDF Error Details:', result);
+                }
+            } catch (error) {
+                showToast(`❌ Error processing PDF: ${error.message}`, 'error');
+                console.error('Network Error:', error);
+            }
+        }
+
+        // Function to add downloaded files to a list (for user reference)
+        function addToDownloadsList(filename, downloadUrl) {
+            // Show the downloads section
+            const downloadsSection = document.getElementById('downloadsSection');
+            downloadsSection.style.display = 'block';
+            
+            const downloadsList = document.getElementById('downloadsList');
+            
+            // Check if this file is already in the list
+            const existingItems = downloadsList.querySelectorAll('.download-item');
+            for (let item of existingItems) {
+                if (item.dataset.filename === filename) {
+                    // File already exists, don't add duplicate
+                    return;
+                }
+            }
+            
+            const downloadItem = document.createElement('div');
+            downloadItem.className = 'download-item flex items-center justify-between bg-white rounded p-3 border';
+            downloadItem.dataset.filename = filename;
+            downloadItem.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas fa-file-pdf text-red-500 mr-3"></i>
+                    <span class="text-sm font-medium text-gray-700">${filename}</span>
+                    <span class="text-xs text-gray-500 ml-2">(${new Date().toLocaleTimeString()})</span>
+                </div>
+                <div class="flex space-x-2">
+                    <a href="${downloadUrl}" download="${filename}" 
+                       class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-xs">
+                        <i class="fas fa-download mr-1"></i>Download
+                    </a>
+                    <a href="${downloadUrl}" target="_blank" 
+                       class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-xs">
+                        <i class="fas fa-eye mr-1"></i>View
+                    </a>
+                </div>
+            `;
+            
+            // Add to top of list
+            downloadsList.insertBefore(downloadItem, downloadsList.firstChild);
+        }
+
+        // Function to refresh the PDFs list from server
+        async function refreshPDFsList() {
+            try {
+                showToast('🔄 Refreshing PDF list...', 'info');
+                
+                const response = await fetch('/list-pdfs');
+                const result = await response.json();
+                
+                const downloadsList = document.getElementById('downloadsList');
+                const downloadsSection = document.getElementById('downloadsSection');
+                
+                // Clear existing list
+                downloadsList.innerHTML = '';
+                
+                if (result.pdfs && result.pdfs.length > 0) {
+                    downloadsSection.style.display = 'block';
+                    
+                    result.pdfs.forEach(pdf => {
+                        const downloadItem = document.createElement('div');
+                        downloadItem.className = 'download-item flex items-center justify-between bg-white rounded p-3 border';
+                        downloadItem.dataset.filename = pdf.filename;
+                        
+                        // Format file size
+                        const fileSize = pdf.size > 1024 ? `${(pdf.size / 1024).toFixed(1)} KB` : `${pdf.size} bytes`;
+                        const createdDate = new Date(pdf.created * 1000).toLocaleString();
+                        
+                        downloadItem.innerHTML = `
+                            <div class="flex items-center">
+                                <i class="fas fa-file-pdf text-red-500 mr-3"></i>
+                                <div>
+                                    <div class="text-sm font-medium text-gray-700">${pdf.filename}</div>
+                                    <div class="text-xs text-gray-500">${fileSize} • ${createdDate}</div>
+                                </div>
+                            </div>
+                            <div class="flex space-x-2">
+                                <a href="${pdf.download_url}" download="${pdf.filename}" 
+                                   class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-xs">
+                                    <i class="fas fa-download mr-1"></i>Download
+                                </a>
+                                <a href="${pdf.download_url}" target="_blank" 
+                                   class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-xs">
+                                    <i class="fas fa-eye mr-1"></i>View
+                                </a>
+                            </div>
+                        `;
+                        
+                        downloadsList.appendChild(downloadItem);
+                    });
+                    
+                    showToast(`✅ Found ${result.pdfs.length} PDF(s)`, 'success');
+                } else {
+                    downloadsSection.style.display = 'none';
+                    showToast('ℹ️ No PDFs downloaded yet', 'info');
+                }
+            } catch (error) {
+                showToast(`❌ Error refreshing PDF list: ${error.message}`, 'error');
+            }
+        }
+
+        function showToast(message, type = 'info') {
+            // Remove any existing toasts first
+            const existingToasts = document.querySelectorAll('.toast-notification');
+            existingToasts.forEach(toast => {
+                if (document.body.contains(toast)) {
+                    document.body.removeChild(toast);
+                }
+            });
+            
+            const toast = document.createElement('div');
+            const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500';
+            const icon = type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-triangle' : 'info-circle';
+            
+            toast.className = `toast-notification fixed top-4 right-4 ${bgColor} text-white px-4 py-3 rounded-lg shadow-lg z-50 max-w-md transform translate-x-full transition-transform duration-300`;
+            toast.innerHTML = `
+                <div class="flex items-start">
+                    <i class="fas fa-${icon} mr-2 mt-1 flex-shrink-0"></i>
+                    <span class="text-sm">${message}</span>
+                    <button onclick="this.parentElement.parentElement.remove()" class="ml-2 text-white hover:text-gray-200">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+            
+            document.body.appendChild(toast);
+            
+            // Slide in
+            setTimeout(() => {
+                toast.style.transform = 'translateX(0)';
+            }, 100);
+            
+            // Auto remove after 8 seconds (longer for better readability)
+            setTimeout(() => {
+                if (document.body.contains(toast)) {
+                    toast.style.transform = 'translateX(100%)';
+                    setTimeout(() => {
+                        if (document.body.contains(toast)) {
+                            document.body.removeChild(toast);
+                        }
+                    }, 300);
+                }
+            }, 8000);
+        }
+
+        async function debugCurrentPage() {
+            const debugBtn = document.getElementById('debugBtn');
+            const statusDiv = document.getElementById('casesProcessingStatus');
+            
+            // Show loading state
+            debugBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Debugging...';
+            debugBtn.disabled = true;
+            
+            statusDiv.innerHTML = `
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div class="flex items-center">
+                        <i class="fas fa-spinner fa-spin text-blue-500 mr-2"></i>
+                        <span class="text-blue-700 font-medium">Analyzing current page...</span>
+                    </div>
+                </div>
+            `;
+            statusDiv.style.display = 'block';
+            
+            try {
+                const response = await fetch('/debug-page');
+                const result = await response.json();
+                
+                if (result.success) {
+                    let debugHTML = `
+                        <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                            <h3 class="text-gray-800 font-semibold mb-2">
+                                <i class="fas fa-info-circle mr-2"></i>
+                                Page Debug Information
+                            </h3>
+                            <div class="text-sm space-y-2">
+                                <p><strong>Current URL:</strong> ${result.current_url}</p>
+                                <p><strong>Page Title:</strong> ${result.page_title}</p>
+                                <p><strong>Tables Found:</strong> ${result.tables_found}</p>
+                            </div>
+                            
+                            <h4 class="font-medium text-gray-700 mt-4 mb-2">View Elements Search Results:</h4>
+                            <div class="space-y-2">
+                    `;
+                    
+                    result.view_elements.forEach(element => {
+                        debugHTML += `
+                            <div class="border border-gray-300 rounded p-2 text-xs">
+                                <p><strong>${element.description}:</strong> ${element.count} found</p>
+                                <p class="text-gray-600">Selector: ${element.selector}</p>
+                                ${element.elements ? element.elements.map(elem => 
+                                    `<p class="text-gray-500">- ${elem.tag}: "${elem.text}" ${elem.onclick ? '(has onclick)' : ''}</p>`
+                                ).join('') : ''}
+                                ${element.error ? `<p class="text-red-500">Error: ${element.error}</p>` : ''}
+                            </div>
+                        `;
+                    });
+                    
+                    if (result.table_info && result.table_info.length > 0) {
+                        debugHTML += `
+                            <h4 class="font-medium text-gray-700 mt-4 mb-2">Table Information:</h4>
+                            <div class="space-y-2">
+                        `;
+                        result.table_info.forEach(table => {
+                            debugHTML += `
+                                <div class="border border-gray-300 rounded p-2 text-xs">
+                                    <p><strong>Table ${table.index}:</strong></p>
+                                    <p>ID: ${table.id || 'N/A'}</p>
+                                    <p>Class: ${table.class || 'N/A'}</p>
+                                    <p>Content: ${table.text_preview || 'N/A'}</p>
+                                </div>
+                            `;
+                        });
+                        debugHTML += '</div>';
+                    }
+                    
+                    debugHTML += '</div></div>';
+                    
+                    statusDiv.innerHTML = debugHTML;
+                    
+                } else {
+                    statusDiv.innerHTML = `
+                        <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                            <h3 class="text-red-800 font-semibold mb-2">
+                                <i class="fas fa-exclamation-triangle mr-2"></i>
+                                Debug Failed
+                            </h3>
+                            <p class="text-red-700 text-sm">${result.error}</p>
+                        </div>
+                    `;
+                }
+                
+            } catch (error) {
+                statusDiv.innerHTML = `
+                    <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                        <h3 class="text-red-800 font-semibold mb-2">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>
+                            Debug Error
+                        </h3>
+                        <p class="text-red-700 text-sm">Failed to debug page: ${error.message}</p>
+                    </div>
+                `;
+            } finally {
+                // Reset button
+                debugBtn.innerHTML = '<i class="fas fa-bug mr-2"></i>Debug Current Page';
+                debugBtn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
